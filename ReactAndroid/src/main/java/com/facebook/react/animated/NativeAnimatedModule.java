@@ -11,6 +11,7 @@ import androidx.annotation.AnyThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
+import android.os.Build;
 import com.facebook.common.logging.FLog;
 import com.facebook.fbreact.specs.NativeAnimatedModuleSpec;
 import com.facebook.infer.annotation.Assertions;
@@ -39,6 +40,7 @@ import com.facebook.react.uimanager.common.ViewUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -151,8 +153,15 @@ public class NativeAnimatedModule extends NativeAnimatedModuleSpec
     }
   }
 
+    private static class QueueUtils {
+        public static Queue<UIThreadOperation> getUIThreadOperationQueue() {
+            return Build.VERSION.SDK_INT == Build.VERSION_CODES.S
+                    ? new LinkedBlockingQueue<>() : new ConcurrentLinkedQueue<>();
+        }
+    }
+
   private class ConcurrentOperationQueue {
-    private final Queue<UIThreadOperation> mQueue = new ConcurrentLinkedQueue<>();
+    private final Queue<UIThreadOperation> mQueue = QueueUtils.getUIThreadOperationQueue();
     @Nullable private UIThreadOperation mPeekedOperation = null;
     private boolean mSynchronizedAccess = false;
 
